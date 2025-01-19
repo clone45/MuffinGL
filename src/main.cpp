@@ -2,6 +2,8 @@
 #include "texture.hpp"
 #include <iostream>
 #include <cmath>
+#include <chrono>
+#include <iostream>
 
 int main(int argc, char* argv[]) {
     try {
@@ -30,42 +32,25 @@ int main(int argc, char* argv[]) {
                 }
             }
 
-            // Calculate mask position
+            // Calculate the mask's position (animated movement)
             time += 0.016f;
             float x = std::cos(time) * 50.0f;
             float y = std::sin(time) * 50.0f;
 
             graphics.clear();
-            
-            // Draw dirt background
+
+            // Step 1: Draw the dirt background
             dirtTexture.render(50, 50);
 
-            // Clear working texture
-            drawLayer.clear(0, 0, 0, 0);
+            // Step 2: Apply the mask to the grass texture
+            grassTexture.applyMask(maskTexture);
 
-            // Render mask into working texture with "None" blend mode (overwrite alpha)
-            maskTexture.render(
-                drawLayer,
-                static_cast<int>(x),
-                static_cast<int>(y),
-                BlendMode::None
-            );
+            // Step 3: Render the updated grass texture directly onto the draw layer
+            grassTexture.render(static_cast<int>(x), static_cast<int>(y), BlendMode::Alpha);
 
-            // Render grass, but only where mask alpha allows it
-            grassTexture.render(
-                drawLayer,
-                static_cast<int>(x),  // Match mask position
-                static_cast<int>(y),
-                BlendMode::Multiply
-            );
-
-            // Blend result over dirt
-            drawLayer.render(50, 50, BlendMode::Alpha);
-            
+            // Present the rendered frame
             graphics.render();
         }
-
-
 
         return 0;
     }

@@ -1,6 +1,3 @@
-Certainly! Below is a `.gitignore` file tailored to the structure of your project, based on the uploaded image:
-
-```plaintext
 # Ignore build artifacts
 *.exe
 *.dll
@@ -33,6 +30,3 @@ lib/
 # Ignore metadata files
 .DS_Store
 Thumbs.db
-```
-
-Adjust this further if there are specific files or folders you want to include or exclude explicitly.

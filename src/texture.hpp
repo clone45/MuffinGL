@@ -51,6 +51,7 @@ public:
     
     // Manipulation
     void resize(int width, int height, ScaleMode mode = ScaleMode::Linear);
+    void applyMask(Texture& mask);
     
     // Pixel operations
     Color getPixel(int x, int y) const;

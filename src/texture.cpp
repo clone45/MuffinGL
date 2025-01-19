@@ -449,3 +449,45 @@ bool Texture::save(const std::string& path) const {
     
     return success;
 }
+
+void Texture::applyMask(Texture& mask) {
+    if (m_width != mask.m_width || m_height != mask.m_height) {
+        throw std::runtime_error("Texture and mask must be the same size");
+    }
+
+    // Create a new texture to hold the composite result
+    Texture composite(m_graphics);
+    composite.m_texture = SDL_CreateTexture(
+        m_graphics.getRenderer(),
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        m_width, m_height
+    );
+    if (!composite.m_texture) {
+        throw std::runtime_error("Failed to create composite texture: " + std::string(SDL_GetError()));
+    }
+    SDL_SetTextureBlendMode(composite.m_texture, SDL_BLENDMODE_BLEND);
+
+    // Store the current render target
+    SDL_Texture* previousTarget = SDL_GetRenderTarget(m_graphics.getRenderer());
+    SDL_SetRenderTarget(m_graphics.getRenderer(), composite.m_texture);
+
+    // Step 1: Stamp the mask onto the composite texture (overwrite alpha)
+    SDL_SetTextureBlendMode(mask.m_texture, SDL_BLENDMODE_NONE);
+    SDL_Rect fullRect = { 0, 0, m_width, m_height };
+    SDL_RenderCopy(m_graphics.getRenderer(), mask.m_texture, nullptr, &fullRect);
+
+    // Step 2: Stamp the grass onto the composite texture (modulate with alpha)
+    SDL_SetTextureBlendMode(m_texture, SDL_BLENDMODE_MOD);
+    SDL_RenderCopy(m_graphics.getRenderer(), m_texture, nullptr, &fullRect);
+
+    // Restore the original render target
+    SDL_SetRenderTarget(m_graphics.getRenderer(), previousTarget);
+
+    // Step 3: Replace this texture with the composite
+    SDL_DestroyTexture(m_texture);
+    m_texture = composite.m_texture;
+
+    // The composite texture is now owned by this Texture object
+    composite.m_texture = nullptr;
+}
