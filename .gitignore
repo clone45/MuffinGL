@@ -1,0 +1,38 @@
+Certainly! Below is a `.gitignore` file tailored to the structure of your project, based on the uploaded image:
+
+```plaintext
+# Ignore build artifacts
+*.exe
+*.dll
+*.bat
+
+# Ignore debug files
+debug_*.png
+
+# Ignore SDL2 configuration
+sdl2-config
+
+# Ignore temporary or generated files
+*.log
+*.tmp
+
+# Ignore Visual Studio Code folder
+.vscode/
+
+# Ignore library files
+lib/
+
+# Ignore compiled object files (if applicable)
+*.o
+*.obj
+
+# Ignore backup files
+*.bak
+*.old
+
+# Ignore metadata files
+.DS_Store
+Thumbs.db
+```
+
+Adjust this further if there are specific files or folders you want to include or exclude explicitly.

@@ -5,16 +5,25 @@
 
 int main(int argc, char* argv[]) {
     try {
-        Graphics graphics(800, 600, "Advanced Wrap Test");
+        Graphics graphics(600, 400, "KansoGL Mask Test");
         
-        // Load source texture
-        auto sourceTexture = Texture::create(graphics, "resources/grass.png");
-        auto destTexture = Texture::create(graphics, 800, 600);
+        // Load and resize textures to 200x200
+        auto dirtTexture = Texture::create(graphics, "resources/dirt.png");
+        auto grassTexture = Texture::create(graphics, "resources/grass.png");
+        auto maskTexture = Texture::create(graphics, "resources/mask_white.png");
         
+        dirtTexture.resize(200, 200);
+        grassTexture.resize(200, 200);
+        maskTexture.resize(200, 200);
+        
+        // write resized mask to disk for testing
+        maskTexture.save("resources/mask_white_resized.png");
+
+        // Create a working texture
+        auto workingTexture = Texture::create(graphics, 200, 200);
+        
+        float time = 0.0f;
         bool running = true;
-        float time = 0;
-        float scale = 1.0f;
-        bool scaleIncreasing = true;
         
         while (running) {
             Graphics::Event event;
@@ -24,76 +33,42 @@ int main(int argc, char* argv[]) {
                 }
             }
 
+            // Calculate mask position
+            time += 0.016f;
+            float x = std::cos(time) * 50.0f;
+            float y = std::sin(time) * 50.0f;
+
             graphics.clear();
             
-            // Update animations
-            time += 0.016f;  // Approximate 60 FPS
-            if (scaleIncreasing) {
-                scale += 0.001f;
-                if (scale > 2.0f) scaleIncreasing = false;
-            } else {
-                scale -= 0.001f;
-                if (scale < 0.5f) scaleIncreasing = true;
-            }
+            // Draw dirt background
+            dirtTexture.render(50, 50);
 
-            // Test 1: Rotating sample positions (top left)
-            {
-                float radius = 50.0f;
-                float x = std::cos(time * 2.0f) * radius;
-                float y = std::sin(time * 2.0f) * radius;
-                sourceTexture.render(
-                    static_cast<int>(x), static_cast<int>(y),
-                    32, 32,
-                    100, 100
-                );
-            }
+            // Clear working texture
+            workingTexture.clear(0, 0, 0, 0);
 
-            // Test 2: Growing/shrinking sample size (top right)
-            {
-                int sampleSize = static_cast<int>(64.0f * scale);
-                sourceTexture.render(
-                    0, 0,
-                    sampleSize, sampleSize,
-                    500, 100
-                );
-            }
+            // Render mask into working texture with "None" blend mode (overwrite alpha)
+            maskTexture.render(
+                workingTexture,
+                static_cast<int>(x),
+                static_cast<int>(y),
+                BlendMode::None
+            );
 
-            // Test 3: Diagonal movement with large sample (middle)
-            {
-                float diagonal = std::fmod(time * 100.0f, 200.0f) - 100.0f;
-                sourceTexture.render(
-                    static_cast<int>(diagonal), 
-                    static_cast<int>(diagonal),
-                    128, 128,
-                    300, 200
-                );
-            }
+            // Render grass, but only where mask alpha allows it
+            grassTexture.render(
+                workingTexture,
+                static_cast<int>(x),  // Match mask position
+                static_cast<int>(y),
+                BlendMode::Multiply
+            );
 
-            // Test 4: Multiple small samples in a grid (bottom)
-            {
-                float offset = std::sin(time * 3.0f) * 32.0f;
-                for (int i = 0; i < 8; i++) {
-                    sourceTexture.render(
-                        static_cast<int>(offset) + (i * 16), 
-                        static_cast<int>(offset),
-                        16, 16,
-                        100 + (i * 80), 400
-                    );
-                }
-            }
-
-            // Test 5: Super-wide sample (spanning multiple wraps)
-            {
-                float yPos = std::sin(time) * 32.0f;
-                sourceTexture.render(
-                    0, static_cast<int>(yPos),
-                    400, 32,  // width larger than texture
-                    200, 500
-                );
-            }
+            // Blend result over dirt
+            workingTexture.render(50, 50, BlendMode::Alpha);
             
             graphics.render();
         }
+
+
 
         return 0;
     }

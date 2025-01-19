@@ -5,6 +5,18 @@
 
 class Graphics;
 
+enum class BlendMode {
+    None,       // No blending
+    Alpha,      // Regular alpha blending
+    Additive,   // Colors are added together
+    Multiply    // Colors are multiplied together
+};
+
+// In texture.hpp:
+struct Color {
+    uint8_t r, g, b, a;
+};
+
 class Texture {
 public:
     ~Texture();
@@ -13,13 +25,6 @@ public:
         Nearest,   // Fast but pixelated
         Linear,    // Smooth blending
         Best      // Best quality but slower
-    };
-
-    enum class BlendMode {
-        None,       // No blending
-        Alpha,      // Regular alpha blending
-        Additive,   // Colors are added together
-        Multiply    // Colors are multiplied together
     };
 
     // Prevent copying
@@ -34,12 +39,21 @@ public:
     static Texture create(Graphics& graphics, int width, int height);
     static Texture create(Graphics& graphics, const std::string& path);
 
+    // Saving
+    bool save(const std::string& path) const;
+
+    // Clearing
+    void clear(uint8_t r = 0, uint8_t g = 0, uint8_t b = 0, uint8_t a = 0);
+
     // Drawing
     void draw(int x, int y);
     void draw(Texture& target, int x, int y);
     
     // Manipulation
     void resize(int width, int height, ScaleMode mode = ScaleMode::Linear);
+    
+    // Pixel operations
+    Color getPixel(int x, int y) const;
 
     // Properties
     int getWidth() const { return m_width; }
@@ -64,9 +78,10 @@ private:
     
     Graphics& m_graphics;
     SDL_Texture* m_texture;
+    SDL_Surface* m_surface = nullptr;
     SDL_BlendMode m_previousBlendMode;
-    int m_width;
-    int m_height;
+    int m_width = 0;
+    int m_height = 0;
 
     void setBlendMode(BlendMode mode) {
         // Store current blend mode before changing it
