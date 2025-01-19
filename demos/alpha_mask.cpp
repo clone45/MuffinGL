@@ -65,8 +65,6 @@ int main(int argc, char* argv[]) {
             graphics.render();
         }
 
-
-
         return 0;
     }
     catch (const std::exception& e) {
