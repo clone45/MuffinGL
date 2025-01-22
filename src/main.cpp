@@ -45,13 +45,29 @@ int main(int argc, char* argv[]) {
             drawLayer.clear(0, 0, 0, 0);
             
             // Compose brush in local space (at 0,0)
+//            grassTexture.render(
+//                drawLayer,
+//                0,         // Local space x
+//                0,         // Local space y
+//                BlendMode::None  // No blending for initial composition
+//            );
+            
+            // BitBlt region to screen
+            // void Texture::render(Texture& target,
+            //       int sourceX, int sourceY, int sourceWidth, int sourceHeight,
+            //       int destX, int destY, BlendMode mode) {
+
             grassTexture.render(
                 drawLayer,
+                x,         // Texture source position x
+                y,         // Texture source position y
+                200,       // Texture source width
+                200,       // Texture source height
                 0,         // Local space x
                 0,         // Local space y
                 BlendMode::None  // No blending for initial composition
             );
-            
+
             // Apply the mask in local space
             drawLayer.applyMask(maskTexture);
             
