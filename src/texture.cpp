@@ -75,17 +75,48 @@ Texture Texture::create(Graphics& graphics, int width, int height) {
     return texture;
 }
 
-Texture Texture::create(Graphics& graphics, const std::string& path) {
+Texture Texture::create(Graphics& graphics, const std::string& path, bool makeTarget) {
     Texture texture(graphics);
 
+    // Step 1: Load from file normally to preserve alpha
     texture.m_surface = IMG_Load(path.c_str());
     if (!texture.m_surface) {
         throw std::runtime_error("Failed to load image: " + std::string(IMG_GetError()));
     }
 
-    texture.m_texture = SDL_CreateTextureFromSurface(graphics.getRenderer(), texture.m_surface);
-    if (!texture.m_texture) {
-        throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
+    if (!makeTarget) {
+        // For non-render targets, just create directly from surface
+        texture.m_texture = SDL_CreateTextureFromSurface(graphics.getRenderer(), texture.m_surface);
+        if (!texture.m_texture) {
+            throw std::runtime_error("Failed to create texture: " + std::string(SDL_GetError()));
+        }
+    } else {
+        // For render targets, create temp texture then copy to target
+        SDL_Texture* tempTexture = SDL_CreateTextureFromSurface(graphics.getRenderer(), texture.m_surface);
+        if (!tempTexture) {
+            throw std::runtime_error("Failed to create temp texture: " + std::string(SDL_GetError()));
+        }
+
+        // Create the target texture
+        texture.m_texture = SDL_CreateTexture(
+            graphics.getRenderer(),
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_TARGET,
+            texture.m_surface->w,
+            texture.m_surface->h
+        );
+        if (!texture.m_texture) {
+            SDL_DestroyTexture(tempTexture);
+            throw std::runtime_error("Failed to create target texture: " + std::string(SDL_GetError()));
+        }
+
+        // Copy temp texture to target
+        SDL_SetRenderTarget(graphics.getRenderer(), texture.m_texture);
+        SDL_RenderCopy(graphics.getRenderer(), tempTexture, nullptr, nullptr);
+        SDL_SetRenderTarget(graphics.getRenderer(), nullptr);
+
+        // Clean up temp texture
+        SDL_DestroyTexture(tempTexture);
     }
 
     texture.m_width = texture.m_surface->w;
@@ -186,12 +217,32 @@ void Texture::resize(int width, int height, ScaleMode mode) {
     SDL_BlitScaled(surface, nullptr, scaledSurface, nullptr);
 
     // Create new texture from scaled surface
-    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(m_graphics.getRenderer(), scaledSurface);
+//    SDL_Texture* newTexture = SDL_CreateTextureFromSurface(m_graphics.getRenderer(), scaledSurface);
+//    if (!newTexture) {
+//        SDL_FreeSurface(surface);
+//        SDL_FreeSurface(scaledSurface);
+//        throw std::runtime_error("Failed to create new texture: " + std::string(SDL_GetError()));
+//    }
+
+    SDL_Texture* newTexture = SDL_CreateTexture(
+        m_graphics.getRenderer(),
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        width, height
+    );
     if (!newTexture) {
         SDL_FreeSurface(surface);
         SDL_FreeSurface(scaledSurface);
         throw std::runtime_error("Failed to create new texture: " + std::string(SDL_GetError()));
     }
+
+    // Set it as render target and copy the scaled surface data to it
+    SDL_SetRenderTarget(m_graphics.getRenderer(), newTexture);
+    SDL_Texture* tempTexture = SDL_CreateTextureFromSurface(m_graphics.getRenderer(), scaledSurface);
+    SDL_RenderCopy(m_graphics.getRenderer(), tempTexture, nullptr, nullptr);
+    SDL_DestroyTexture(tempTexture);
+    SDL_SetRenderTarget(m_graphics.getRenderer(), nullptr);
+
 
     // Set blend mode on new texture
     SDL_SetTextureBlendMode(newTexture, SDL_BLENDMODE_BLEND);
@@ -238,7 +289,10 @@ void Texture::render(Texture& target, int destX, int destY, BlendMode mode) {
     SDL_Texture* previousTarget = SDL_GetRenderTarget(m_graphics.getRenderer());
 
     // Set the target texture as the render target
-    SDL_SetRenderTarget(m_graphics.getRenderer(), target.m_texture);
+    if (SDL_SetRenderTarget(m_graphics.getRenderer(), target.m_texture) != 0) {
+        std::cout << "Failed to set render target: " << SDL_GetError() << std::endl;
+        return;  // Or throw an exception
+    }
 
     // Ensure the target area is cleared (optional, depending on use case)
     if (mode == BlendMode::Alpha) {
@@ -254,6 +308,7 @@ void Texture::render(Texture& target, int destX, int destY, BlendMode mode) {
 
     // Restore the blend mode
     restoreBlendMode();
+
 }
 
 
@@ -512,6 +567,7 @@ void Texture::applyMask(Texture& mask) {
 
     // Restore the original render target
     SDL_SetRenderTarget(m_graphics.getRenderer(), previousTarget);
+    SDL_SetRenderDrawBlendMode(m_graphics.getRenderer(), SDL_BLENDMODE_BLEND);
 
     // Step 3: Replace this texture with the composite
     SDL_DestroyTexture(m_texture);

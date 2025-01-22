@@ -7,10 +7,11 @@
 class Graphics;
 
 enum class BlendMode {
-    None,       // No blending
-    Alpha,      // Regular alpha blending
-    Additive,   // Colors are added together
-    Multiply    // Colors are multiplied together
+    None,           // No blending
+    Alpha,          // Regular alpha blending
+    Additive,       // Colors are added together
+    Multiply,       // Colors are multiplied together
+    AlphaPreserve   // Add this new mode
 };
 
 // In texture.hpp:
@@ -38,7 +39,7 @@ public:
 
     // Creation
     static Texture create(Graphics& graphics, int width, int height);
-    static Texture create(Graphics& graphics, const std::string& path);
+    static Texture create(Graphics& graphics, const std::string& path, bool makeTarget = false);
 
     // Saving
     bool save(const std::string& path) const;
@@ -105,6 +106,15 @@ private:
                 return SDL_BLENDMODE_ADD;
             case BlendMode::Multiply:
                 return SDL_BLENDMODE_MOD;
+            case BlendMode::AlphaPreserve:
+return SDL_ComposeCustomBlendMode(
+    SDL_BLENDFACTOR_SRC_ALPHA,         // source color factor
+    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, // destination color factor
+    SDL_BLENDOPERATION_ADD,            // color operation
+    SDL_BLENDFACTOR_ONE,               // source alpha factor
+    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, // destination alpha factor
+    SDL_BLENDOPERATION_ADD             // alpha operation
+);
             default:
                 return SDL_BLENDMODE_BLEND;
         }
