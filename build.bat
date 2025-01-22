@@ -8,7 +8,10 @@ if errorlevel 1 exit /b 1
 g++ -c src/texture.cpp -I./include
 if errorlevel 1 exit /b 1
 
-g++ main.o graphics.o texture.o -o main.exe -L./lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
+g++ -c src/camera.cpp -I./include
 if errorlevel 1 exit /b 1
 
-del main.o graphics.o texture.o
+g++ main.o graphics.o texture.o camera.o -o main.exe -L./lib -lmingw32 -lSDL2main -lSDL2 -lSDL2_image
+if errorlevel 1 exit /b 1
+
+del main.o graphics.o texture.o camera.o

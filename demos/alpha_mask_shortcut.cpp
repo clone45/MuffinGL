@@ -1,4 +1,3 @@
-// C:\Code\GameDev\muffinGL\src\main.cpp
 #include "graphics.hpp"
 #include "texture.hpp"
 #include <iostream>

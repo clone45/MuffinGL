@@ -21,7 +21,7 @@ Key features implemented:
 - Event handling
 - Texture loading
 - Texture resizing with different scale modes
-- render operations (just added, testing in progress)
+- render operations
 Design principles:
 - Hide SDL complexity from users
 - Provide intuitive, unified interfaces

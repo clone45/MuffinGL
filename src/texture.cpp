@@ -209,10 +209,21 @@ void Texture::resize(int width, int height, ScaleMode mode) {
 
 
 // BitBlt entire texture to screen
-void Texture::render(int destX, int destY, BlendMode mode) {
+void Texture::render(int worldX, int worldY, const Camera* camera, BlendMode mode) {
     setBlendMode(mode);
     
-    SDL_Rect destRect = { destX, destY, m_width, m_height };
+    int screenX = worldX;
+    int screenY = worldY;
+    int width = m_width;
+    int height = m_height;
+    
+    if (camera) {
+        camera->worldToScreen(worldX, worldY, screenX, screenY);
+        width = static_cast<int>(width * camera->getZoom());
+        height = static_cast<int>(height * camera->getZoom());
+    }
+    
+    SDL_Rect destRect = { screenX, screenY, width, height };
     SDL_RenderCopy(m_graphics.getRenderer(), m_texture, nullptr, &destRect);
     
     restoreBlendMode();
@@ -231,10 +242,7 @@ void Texture::render(Texture& target, int destX, int destY, BlendMode mode) {
 
     // Ensure the target area is cleared (optional, depending on use case)
     if (mode == BlendMode::Alpha) {
-        SDL_SetRenderDrawBlendMode(m_graphics.getRenderer(), SDL_BLENDMODE_NONE);
-        SDL_SetRenderDrawColor(m_graphics.getRenderer(), 0, 0, 0, 0); // Fully transparent
-        SDL_Rect clearRect = { destX, destY, m_width, m_height };
-        SDL_RenderFillRect(m_graphics.getRenderer(), &clearRect);
+        SDL_SetRenderDrawBlendMode(m_graphics.getRenderer(), SDL_BLENDMODE_BLEND);
     }
 
     // Render the source texture onto the target
@@ -251,9 +259,19 @@ void Texture::render(Texture& target, int destX, int destY, BlendMode mode) {
 
 // BitBlt region to screen
 void Texture::render(int sourceX, int sourceY, int sourceWidth, int sourceHeight,
-                   int destX, int destY, BlendMode mode) {
-
+                    int destX, int destY, const Camera* camera, BlendMode mode) {
     setBlendMode(mode);
+
+    int screenX = destX;
+    int screenY = destY;
+    int width = sourceWidth;
+    int height = sourceHeight;
+    
+    if (camera) {
+        camera->worldToScreen(destX, destY, screenX, screenY);
+        width = static_cast<int>(width * camera->getZoom());
+        height = static_cast<int>(height * camera->getZoom());
+    }
 
     // Wrap source coordinates to valid texture positions
     sourceX = sourceX % m_width;
@@ -273,27 +291,38 @@ void Texture::render(int sourceX, int sourceY, int sourceWidth, int sourceHeight
     
     // First segment (top-left)
     SDL_Rect sourceRect = { sourceX, sourceY, firstWidth, firstHeight };
-    SDL_Rect destRect = { destX, destY, firstWidth, firstHeight };
+    SDL_Rect destRect = { screenX, screenY, 
+                         static_cast<int>(firstWidth * camera->getZoom()), 
+                         static_cast<int>(firstHeight * camera->getZoom()) };
     SDL_RenderCopy(m_graphics.getRenderer(), m_texture, &sourceRect, &destRect);
     
     // If we need to wrap horizontally, render the top-right segment
     if (remainingWidth > 0) {
         sourceRect = { 0, sourceY, remainingWidth, firstHeight };
-        destRect = { destX + firstWidth, destY, remainingWidth, firstHeight };
+        destRect = { screenX + static_cast<int>(firstWidth * camera->getZoom()), 
+                    screenY, 
+                    static_cast<int>(remainingWidth * camera->getZoom()),
+                    static_cast<int>(firstHeight * camera->getZoom()) };
         SDL_RenderCopy(m_graphics.getRenderer(), m_texture, &sourceRect, &destRect);
     }
     
     // If we need to wrap vertically, render the bottom-left segment
     if (remainingHeight > 0) {
         sourceRect = { sourceX, 0, firstWidth, remainingHeight };
-        destRect = { destX, destY + firstHeight, firstWidth, remainingHeight };
+        destRect = { screenX, 
+                    screenY + static_cast<int>(firstHeight * camera->getZoom()),
+                    static_cast<int>(firstWidth * camera->getZoom()),
+                    static_cast<int>(remainingHeight * camera->getZoom()) };
         SDL_RenderCopy(m_graphics.getRenderer(), m_texture, &sourceRect, &destRect);
     }
     
     // If we need to wrap both horizontally and vertically, render the bottom-right segment
     if (remainingWidth > 0 && remainingHeight > 0) {
         sourceRect = { 0, 0, remainingWidth, remainingHeight };
-        destRect = { destX + firstWidth, destY + firstHeight, remainingWidth, remainingHeight };
+        destRect = { screenX + static_cast<int>(firstWidth * camera->getZoom()),
+                    screenY + static_cast<int>(firstHeight * camera->getZoom()),
+                    static_cast<int>(remainingWidth * camera->getZoom()),
+                    static_cast<int>(remainingHeight * camera->getZoom()) };
         SDL_RenderCopy(m_graphics.getRenderer(), m_texture, &sourceRect, &destRect);
     }
 

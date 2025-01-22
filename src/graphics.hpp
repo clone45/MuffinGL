@@ -21,12 +21,15 @@ public:
         Quit,
         MouseMove,
         MouseDown,
-        MouseUp
+        MouseUp,
+        MouseWheel
     };
 
     struct MouseData {
         int x, y;
         uint8_t button;
+        int wheelX;
+        int wheelY;
     };
 
     struct Event {

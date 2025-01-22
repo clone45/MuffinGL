@@ -93,6 +93,13 @@ bool Graphics::pollEvent(Event& event) {
                 event.mouseData.button = sdlEvent.button.button;
                 return true;
 
+            case SDL_MOUSEWHEEL:
+                event.type = EventType::MouseWheel;
+                event.mouseData.wheelX = sdlEvent.wheel.x;
+                event.mouseData.wheelY = sdlEvent.wheel.y;
+                SDL_GetMouseState(&event.mouseData.x, &event.mouseData.y);
+                return true;
+
             default:
                 event.type = EventType::None;
                 return true;

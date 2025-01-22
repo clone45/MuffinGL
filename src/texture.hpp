@@ -2,6 +2,7 @@
 #pragma once
 #include <SDL2/SDL.h>
 #include <string>
+#include "camera.hpp"
 
 class Graphics;
 
@@ -60,13 +61,13 @@ public:
     int getWidth() const { return m_width; }
     int getHeight() const { return m_height; }
 
-    void render(int destX, int destY, BlendMode mode = BlendMode::Alpha);
+    void render(int x, int y, const Camera* camera = nullptr, BlendMode mode = BlendMode::Alpha);
     
     void render(Texture& target, int destX, int destY, 
                 BlendMode mode = BlendMode::Alpha);
     
     void render(int sourceX, int sourceY, int sourceWidth, int sourceHeight,
-                int destX, int destY, BlendMode mode = BlendMode::Alpha);
+                int destX, int destY, const Camera* camera = nullptr, BlendMode mode = BlendMode::Alpha);
     
     void render(Texture& target,
                 int sourceX, int sourceY, int sourceWidth, int sourceHeight,
