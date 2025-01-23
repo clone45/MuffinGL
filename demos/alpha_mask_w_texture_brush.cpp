@@ -11,21 +11,24 @@ int main(int argc, char* argv[]) {
         Graphics graphics(600, 400, "MuffinGL Mask Test");
         
         // Load and resize textures to 200x200
-        auto dirtTexture = Texture::create(graphics, "resources/dirt.png");
         auto grassTexture = Texture::create(graphics, "resources/grass.png");
         auto maskTexture = Texture::create(graphics, "resources/mask_white.png");
-        
+        auto dirtTexture = Texture::create(graphics, "resources/dirt.png", true);
+        auto compositeBrushLayer = Texture::create(graphics, 100, 100);
+
+        // maskTexture.save("resources/loaded_mask.png");
+
         dirtTexture.resize(1024, 1024);
         grassTexture.resize(BRUSH_SIZE, BRUSH_SIZE);
         maskTexture.resize(BRUSH_SIZE, BRUSH_SIZE);
         
-        // Create a working texture for our composition
-        auto compositeBrushLayer = Texture::create(graphics, 100, 100);
+        // maskTexture.save("resources/resized_mask.png");        
         
         float time = 0.0f;
         bool running = true;
         
         while (running) {
+
             Graphics::Event event;
             while (graphics.pollEvent(event)) {
                 if (event.type == Graphics::EventType::Quit) {
@@ -57,12 +60,15 @@ int main(int argc, char* argv[]) {
             // Apply the mask to the composite layer
             compositeBrushLayer.applyMask(maskTexture);
             
+            // save the composed brush to a file
+            // compositeBrushLayer.save("resources/composite.png");
+
             // Render the composed brush to the dirt texture
             compositeBrushLayer.render(
                 dirtTexture,
                 static_cast<int>(x),
                 static_cast<int>(y), 
-                BlendMode::Alpha
+                BlendMode::AlphaPreserve
             );
             
             // Draw dirt background with composed brush baked into it to the screen

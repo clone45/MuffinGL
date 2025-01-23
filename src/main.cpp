@@ -16,16 +16,13 @@ int main(int argc, char* argv[]) {
         auto dirtTexture = Texture::create(graphics, "resources/dirt.png", true);
         auto compositeBrushLayer = Texture::create(graphics, 100, 100);
 
-        maskTexture.save("resources/loaded_mask.png");
+        // maskTexture.save("resources/loaded_mask.png");
 
         dirtTexture.resize(1024, 1024);
         grassTexture.resize(BRUSH_SIZE, BRUSH_SIZE);
         maskTexture.resize(BRUSH_SIZE, BRUSH_SIZE);
         
-        maskTexture.save("resources/resized_mask.png");
-
-        // Create a working texture for our composition
-        
+        // maskTexture.save("resources/resized_mask.png");        
         
         float time = 0.0f;
         bool running = true;

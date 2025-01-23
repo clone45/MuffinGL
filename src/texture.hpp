@@ -107,14 +107,14 @@ private:
             case BlendMode::Multiply:
                 return SDL_BLENDMODE_MOD;
             case BlendMode::AlphaPreserve:
-return SDL_ComposeCustomBlendMode(
-    SDL_BLENDFACTOR_SRC_ALPHA,         // source color factor
-    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, // destination color factor
-    SDL_BLENDOPERATION_ADD,            // color operation
-    SDL_BLENDFACTOR_ONE,               // source alpha factor
-    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA, // destination alpha factor
-    SDL_BLENDOPERATION_ADD             // alpha operation
-);
+                return SDL_ComposeCustomBlendMode(
+                    SDL_BLENDFACTOR_SRC_ALPHA,              // source color factor
+                    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination color factor
+                    SDL_BLENDOPERATION_ADD,                 // color operation
+                    SDL_BLENDFACTOR_ONE,                    // source alpha factor
+                    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination alpha factor
+                    SDL_BLENDOPERATION_ADD                  // alpha operation
+                );
             default:
                 return SDL_BLENDMODE_BLEND;
         }
