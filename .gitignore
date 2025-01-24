@@ -19,6 +19,8 @@ sdl2-config
 # Ignore library files
 lib/
 
+logs/
+
 # Ignore compiled object files (if applicable)
 *.o
 *.obj

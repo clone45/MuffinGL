@@ -14,7 +14,8 @@ int main(int argc, char* argv[]) {
         ensureDirectoryExists("logs");
         
         // Constants for testing
-        const int TEST_SIZE = 200;
+        const int LAYER_SIZE = 1024;
+        const int BRUSH_SIZE = 200;
         const int SMALL_SIZE = 100;  // For testing resize
         
         // Load and resize all textures to same dimensions
@@ -22,62 +23,62 @@ int main(int argc, char* argv[]) {
         auto dirt = Texture::create(graphics, "resources/dirt_1024x1024.png");
         auto mask = Texture::create(graphics, "resources/mask_white_255x255.png");
         
-        grass.resize(TEST_SIZE, TEST_SIZE);
-        dirt.resize(TEST_SIZE, TEST_SIZE);
-        mask.resize(TEST_SIZE, TEST_SIZE);
+        grass.resize(BRUSH_SIZE, BRUSH_SIZE);
+        // dirt.resize(BRUSH_SIZE, BRUSH_SIZE);
+        mask.resize(BRUSH_SIZE, BRUSH_SIZE);
         
         // Test 1: Save base textures
         grass.save("logs/01_grass_base.png");
         dirt.save("logs/02_dirt_base.png");
         mask.save("logs/03_mask_base.png");
-
-        // Test 2: Mask resize test
-        auto resizedMask = Texture::create(graphics, "resources/mask_white_255x255.png");
-        resizedMask.resize(SMALL_SIZE, SMALL_SIZE);
-        resizedMask.save("logs/04_mask_resized.png");
         
         // Test 3: Basic masking
-        auto compositeTexture = Texture::create(graphics, TEST_SIZE, TEST_SIZE);
-        compositeTexture.clear(0, 0, 0, 0);
-        compositeTexture.save("logs/05_composit_texture_cleared.png");
+        auto brushTexture = Texture::create(graphics, BRUSH_SIZE, BRUSH_SIZE);
 
-        // grass.render(compositeTexture, 0, 0, BlendMode::None);
+        // grass.render(brushTexture, 0, 0, BlendMode::None);
 
         grass.render(
-            compositeTexture,
+            brushTexture,
             0,          // Texture source position x
             0,          // Texture source position y
-            TEST_SIZE, // Texture source width
-            TEST_SIZE, // Texture source height
+            BRUSH_SIZE, // Texture source width
+            BRUSH_SIZE, // Texture source height
             0,          // Local space x
             0,          // Local space y
             BlendMode::None  // No blending for initial composition
         );        
 
-        compositeTexture.applyMask(mask);
-        compositeTexture.save("logs/06_grass_masked.png");
+        brushTexture.applyMask(mask);
+        brushTexture.save("logs/06_grass_masked.png");
         
         // Test 4: Layer composition
-        auto baseLayer = Layer::create(graphics, TEST_SIZE * 2, TEST_SIZE * 2);
-        auto topLayer = Layer::create(graphics, TEST_SIZE * 2, TEST_SIZE * 2);
-        auto finalLayer = Layer::create(graphics, TEST_SIZE * 2, TEST_SIZE * 2);
+        auto baseLayer = Layer::create(graphics, LAYER_SIZE, LAYER_SIZE);
+        auto topLayer = Layer::create(graphics, LAYER_SIZE, LAYER_SIZE);
+        auto finalLayer = Layer::create(graphics, LAYER_SIZE, LAYER_SIZE);
         
-baseLayer.clear(0, 0, 0, 0);
-topLayer.clear(0, 0, 0, 0);
-finalLayer.clear(0, 0, 0, 0);
+        baseLayer.clear(0, 0, 0, 0);
+        topLayer.clear(0, 0, 0, 0);
+        finalLayer.clear(0, 0, 0, 0);
 
         // Draw dirt background
         dirt.render(baseLayer, 0, 0);
         
+        brushTexture.save("logs/06b_composite_pre_render.png");
+
         // Draw masked grass in center
-        compositeTexture.render(topLayer, TEST_SIZE/2, TEST_SIZE/2, BlendMode::AlphaPreserve);
+        brushTexture.render(topLayer, LAYER_SIZE/2, LAYER_SIZE/2, BlendMode::AlphaPreserve);
+
+        // Save toplayer for debugging
+        std::cout << "Saving topLayer to logs/07_top_layer.png" << std::endl;
+        topLayer.save("logs/07_top_layer.png");
+        topLayer.debug();
         
         // Compose layers
         baseLayer.flattenTo(finalLayer);
-        topLayer.flattenTo(finalLayer, BlendMode::AlphaPreserve);
+        topLayer.flattenTo(finalLayer, BlendMode::LayerComposite);
         
         // Save final result
-        finalLayer.save("logs/07_final_composition.png");
+        finalLayer.save("logs/08_final_composition.png");
         
         return 0;
     }
