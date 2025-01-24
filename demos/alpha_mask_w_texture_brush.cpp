@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
         Graphics graphics(600, 400, "MuffinGL Mask Test");
         
         // Load and resize textures to 200x200
-        auto grassTexture = Texture::create(graphics, "resources/grass.png");
-        auto maskTexture = Texture::create(graphics, "resources/mask_white.png");
-        auto dirtTexture = Texture::create(graphics, "resources/dirt.png", true);
-        auto compositeBrushLayer = Texture::create(graphics, 100, 100);
+        auto grassTexture = Texture::create(graphics, "resources/grass_1024x1024.png");
+        auto maskTexture = Texture::create(graphics, "resources/mask_white_255x255.png");
+        auto dirtTexture = Texture::create(graphics, "resources/dirt_1024x1024.png", true);
+        auto compositeBrushLayer = Texture::create(graphics, BRUSH_SIZE, BRUSH_SIZE);
 
         // maskTexture.save("resources/loaded_mask.png");
 

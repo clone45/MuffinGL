@@ -69,33 +69,15 @@ finalLayer.clear(0, 0, 0, 0);
         // Draw dirt background
         dirt.render(baseLayer, 0, 0);
         
-        std::cout << "Saving debug composite texture before render..." << std::endl;
-        compositeTexture.save("logs/06b_composite_pre_render.png");
-
-
-
-
         // Draw masked grass in center
-        std::cout << "Rendering masked grass to topLayer" << std::endl;
         compositeTexture.render(topLayer, TEST_SIZE/2, TEST_SIZE/2, BlendMode::AlphaPreserve);
-
-
-
-
-        std::cout << "Composite texture debug" << std::endl;
-        compositeTexture.debug();
-
-        // Save toplayer for debugging
-        std::cout << "Saving topLayer to logs/07_top_layer.png" << std::endl;
-        topLayer.save("logs/07_top_layer.png");
-        topLayer.debug();
         
         // Compose layers
         baseLayer.flattenTo(finalLayer);
-        topLayer.flattenTo(finalLayer, BlendMode::LayerComposite);
+        topLayer.flattenTo(finalLayer, BlendMode::AlphaPreserve);
         
         // Save final result
-        finalLayer.save("logs/08_final_composition.png");
+        finalLayer.save("logs/07_final_composition.png");
         
         return 0;
     }
