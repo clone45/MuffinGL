@@ -1,0 +1,4 @@
+C:/Code/GameDev/muffinGL/build/CMakeFiles/muffinGL.dir
+C:/Code/GameDev/muffinGL/build/CMakeFiles/muffinGL_example.dir
+C:/Code/GameDev/muffinGL/build/CMakeFiles/edit_cache.dir
+C:/Code/GameDev/muffinGL/build/CMakeFiles/rebuild_cache.dir

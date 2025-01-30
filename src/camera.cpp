@@ -1,5 +1,5 @@
 // camera.cpp
-#include "camera.hpp"
+#include "muffinGL/camera.hpp"
 
 Camera::Camera()
     : m_x(0.0f)

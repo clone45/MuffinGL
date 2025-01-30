@@ -1,7 +1,7 @@
 // src\texture.cpp
-#include "texture.hpp"
-#include "graphics.hpp"
-#include "util.hpp"
+#include "muffinGL/texture.hpp"
+#include "muffinGL/graphics.hpp"
+#include "muffinGL/util.hpp"
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 #include <iostream>

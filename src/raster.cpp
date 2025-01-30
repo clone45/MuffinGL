@@ -1,5 +1,5 @@
-#include "raster.hpp"
-#include "util.hpp"
+#include "muffinGL/raster.hpp"
+#include "muffinGL/util.hpp"
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 #include <iostream>
@@ -95,8 +95,8 @@ void Raster::render(int sourceX, int sourceY, int sourceWidth, int sourceHeight,
     int height = sourceHeight;
 
     // output m_width and m_height
-    std::cout << "m_width: " << m_width << std::endl;
-    std::cout << "m_height: " << m_height << std::endl;
+    // std::cout << "m_width: " << m_width << std::endl;
+    // std::cout << "m_height: " << m_height << std::endl;
     
     if (camera) {
         camera->worldToScreen(destX, destY, screenX, screenY);
@@ -161,63 +161,22 @@ void Raster::render(int sourceX, int sourceY, int sourceWidth, int sourceHeight,
 }
 
 void Raster::render(Raster& target, int destX, int destY, BlendMode mode) {
-    std::cout << "== Render Debug ==" << std::endl;
-   
-    // Debug blend modes before changes
-    SDL_BlendMode srcBlend, targetBlend;
-    SDL_GetTextureBlendMode(m_texture, &srcBlend);
-    SDL_GetTextureBlendMode(target.getTexture(), &targetBlend);
-    std::cout << "Initial blend modes - Source: " << blendModeToString(srcBlend)
-              << ", Target: " << blendModeToString(targetBlend) << std::endl;
-
-    // Verify texture properties
-    Uint32 srcFormat, targetFormat;
-    int access;
-    SDL_QueryTexture(m_texture, &srcFormat, &access, nullptr, nullptr);
-    SDL_QueryTexture(target.getTexture(), &targetFormat, nullptr, nullptr, nullptr);
-    std::cout << "Source texture format: " << SDL_GetPixelFormatName(srcFormat) 
-              << ", access: " << (access == SDL_TEXTUREACCESS_TARGET ? "TARGET" : "STATIC") << std::endl;
-    std::cout << "Target texture format: " << SDL_GetPixelFormatName(targetFormat) << std::endl;
-
-    // Check renderer state
-    SDL_RendererInfo rendererInfo;
-    SDL_GetRendererInfo(m_graphics.getRenderer(), &rendererInfo);
-    std::cout << "Renderer name: " << rendererInfo.name << std::endl;
-    std::cout << "Supported blend modes: " 
-              << (rendererInfo.flags & SDL_RENDERER_TARGETTEXTURE ? "Has target texture support" : "No target texture support")
-              << std::endl;
 
     setBlendMode(mode);
     
-    // Debug blend modes after setBlendMode
-    SDL_GetTextureBlendMode(m_texture, &srcBlend);
-    std::cout << "After setBlendMode - Source: " << blendModeToString(srcBlend) << std::endl;
-    std::cout << "Rendering to target using Raster::render(Raster& target, int destX, int destY, BlendMode mode)" << std::endl;
-    
     // Store current render target
     SDL_Texture* previousTarget = SDL_GetRenderTarget(m_graphics.getRenderer());
-   
-    // Let's verify our destRect values before saving
-    std::cout << "destRect: x=" << destX << ", y=" << destY 
-              << ", w=" << m_width << ", h=" << m_height << std::endl;
-
-    target.save("logs/debug_target_pre_render.png");
-    
+       
     // Set the target texture as render target
     if (SDL_SetRenderTarget(m_graphics.getRenderer(), target.getTexture()) != 0) {
         std::cerr << "Failed to set render target: " << SDL_GetError() << std::endl;
         std::exit(EXIT_FAILURE);
     }
-
-    // Right before render, double check blend modes one more time
-    SDL_GetTextureBlendMode(m_texture, &srcBlend);
-    SDL_GetTextureBlendMode(target.getTexture(), &targetBlend);
-    std::cout << "Final pre-render blend modes - Source: " << blendModeToString(srcBlend)
-              << ", Target: " << blendModeToString(targetBlend) << std::endl;
-   
-    // Add a debug clear to see if it affects anything
-    SDL_SetRenderDrawColor(m_graphics.getRenderer(), 0, 0, 0, 0);
-    SDL_RenderClear(m_graphics.getRenderer());
+  
+    
+    // if (mode == BlendMode::Alpha) {
+    //     SDL_SetRenderDrawBlendMode(m_graphics.getRenderer(), SDL_BLENDMODE_BLEND);
+    // }
 
     // Render the texture
     SDL_Rect destRect = { destX, destY, m_width, m_height };
@@ -225,20 +184,10 @@ void Raster::render(Raster& target, int destX, int destY, BlendMode mode) {
         std::cerr << "Failed to render texture: " << SDL_GetError() << std::endl;
         std::exit(EXIT_FAILURE);
     }
-
-    // Right after render, check blend modes again
-    SDL_GetTextureBlendMode(m_texture, &srcBlend);
-    SDL_GetTextureBlendMode(target.getTexture(), &targetBlend);
-    std::cout << "Post-render blend modes - Source: " << blendModeToString(srcBlend)
-              << ", Target: " << blendModeToString(targetBlend) << std::endl;
-   
-    // Immediately after render, before restoring target
-    target.save("logs/debug_target_post_render.png");
     
     // Restore previous render target
     SDL_SetRenderTarget(m_graphics.getRenderer(), previousTarget);
     restoreBlendMode();
-    std::cout << "== End Render Debug ==" << std::endl;
 }
 
 
@@ -305,19 +254,7 @@ void Raster::setBlendMode(BlendMode mode) {
     // Debug renderer blend mode support
     SDL_RendererInfo rendererInfo;
     SDL_GetRendererInfo(m_graphics.getRenderer(), &rendererInfo);
-    std::cout << "Renderer blend mode support:" << std::endl;
-    std::cout << " - Basic blend: " << (SDL_SetTextureBlendMode(m_texture, SDL_BLENDMODE_BLEND) == 0) << std::endl;
 
-    // Try a known custom blend mode
-    SDL_BlendMode testCustom = SDL_ComposeCustomBlendMode(
-        SDL_BLENDFACTOR_ONE,
-        SDL_BLENDFACTOR_ZERO,
-        SDL_BLENDOPERATION_ADD,
-        SDL_BLENDFACTOR_ONE,
-        SDL_BLENDFACTOR_ZERO,
-        SDL_BLENDOPERATION_ADD
-    );
-    std::cout << " - Custom blend (test): " << (SDL_SetTextureBlendMode(m_texture, testCustom) == 0) << std::endl;
 
     // Store current blend mode
     SDL_GetTextureBlendMode(m_texture, &m_originalBlendMode);
@@ -339,36 +276,37 @@ void Raster::setBlendMode(BlendMode mode) {
             break;
         case BlendMode::AlphaPreserve:
             {
+                // Do not change this blend mode.  It is working as expected.
                 SDL_BlendMode customMode = SDL_ComposeCustomBlendMode(
                     SDL_BLENDFACTOR_ONE,                    // source color factor
                     SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination color factor
                     SDL_BLENDOPERATION_ADD,                 // color operation
                     SDL_BLENDFACTOR_ONE,                    // source alpha factor
-                    SDL_BLENDFACTOR_ZERO,                   // destination alpha factor
+                    SDL_BLENDFACTOR_ZERO,                   // destination alpha factor - THIS WAS THE WORKING VERSION
                     SDL_BLENDOPERATION_ADD                  // alpha operation
                 );
-                std::cout << "Created AlphaPreserve blend mode with value: " << static_cast<int>(customMode) << std::endl;
+                // std::cout << "Created AlphaPreserve blend mode with value: " << static_cast<int>(customMode) << std::endl;
                 sdlMode = customMode;
             }
             break;
         case BlendMode::LayerComposite:
             {
                 SDL_BlendMode customMode = SDL_ComposeCustomBlendMode(
-                    SDL_BLENDFACTOR_SRC_ALPHA,              // source color factor
-                    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination color factor
-                    SDL_BLENDOPERATION_ADD,                 // color operation
-                    SDL_BLENDFACTOR_ONE,                    // source alpha factor
-                    SDL_BLENDFACTOR_ONE,                    // destination alpha factor
-                    SDL_BLENDOPERATION_ADD                  // alpha operation
-                );
-                std::cout << "Created LayerComposite blend mode with value: " << static_cast<int>(customMode) << std::endl;
+    SDL_BLENDFACTOR_SRC_ALPHA,              // source color factor
+    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination color factor
+    SDL_BLENDOPERATION_ADD,                 // color operation
+    SDL_BLENDFACTOR_ONE,                    // source alpha factor
+    SDL_BLENDFACTOR_ONE_MINUS_SRC_ALPHA,    // destination alpha factor - CHANGED
+    SDL_BLENDOPERATION_ADD                  // alpha operation
+);
+                // std::cout << "Created LayerComposite blend mode with value: " << static_cast<int>(customMode) << std::endl;
                 sdlMode = customMode;
             }
             break;
     }
    
-    std::cout << "Attempting to set blend mode " << static_cast<int>(mode) 
-              << " which translated to SDL blend mode: " << static_cast<int>(sdlMode) << std::endl;
+    // std::cout << "Attempting to set blend mode " << static_cast<int>(mode) 
+    //          << " which translated to SDL blend mode: " << static_cast<int>(sdlMode) << std::endl;
     
     if (SDL_SetTextureBlendMode(m_texture, sdlMode) != 0) {
         std::cerr << "Failed to set blend mode: " << SDL_GetError() << std::endl;
@@ -378,9 +316,9 @@ void Raster::setBlendMode(BlendMode mode) {
     // Verify the blend mode was set correctly
     SDL_BlendMode currentMode;
     SDL_GetTextureBlendMode(m_texture, &currentMode);
-    std::cout << "setBlendMode requested: " << static_cast<int>(mode) 
-              << ", actual mode set: " << blendModeToString(currentMode)
-              << " (value: " << static_cast<int>(currentMode) << ")" << std::endl;
+    // std::cout << "setBlendMode requested: " << static_cast<int>(mode) 
+    //          << ", actual mode set: " << blendModeToString(currentMode)
+    //          << " (value: " << static_cast<int>(currentMode) << ")" << std::endl;
 }
 
 void Raster::restoreBlendMode() {
@@ -454,12 +392,12 @@ void Raster::debug() {
     int access;
     int width, height;
     SDL_QueryTexture(m_texture, &format, &access, &width, &height);
-    std::cout << "Texture dimensions: " << width << "x" << height << std::endl;
-    std::cout << "Texture format: " << SDL_GetPixelFormatName(format) << std::endl;
-    std::cout << "Texture access: " << (access == SDL_TEXTUREACCESS_STATIC ? "STATIC" :
-                                        access == SDL_TEXTUREACCESS_STREAMING ? "STREAMING" :
-                                        access == SDL_TEXTUREACCESS_TARGET ? "TARGET" :
-                                        "UNKNOWN") << std::endl;
+    // std::cout << "Texture dimensions: " << width << "x" << height << std::endl;
+    // std::cout << "Texture format: " << SDL_GetPixelFormatName(format) << std::endl;
+    // std::cout << "Texture access: " << (access == SDL_TEXTUREACCESS_STATIC ? "STATIC" :
+    //                                    access == SDL_TEXTUREACCESS_STREAMING ? "STREAMING" :
+    //                                    access == SDL_TEXTUREACCESS_TARGET ? "TARGET" :
+    //                                    "UNKNOWN") << std::endl;
                                         
     // debugTextureSamples(m_graphics.getRenderer(), m_texture);
 }
@@ -492,32 +430,32 @@ void Raster::debugTextureSamples(SDL_Renderer* renderer, SDL_Texture* texture) {
     int middleY = height / 2;
 
     // Output middle column
-    std::cout << "Middle Column (x = " << middleX << "):" << std::endl;
+    // std::cout << "Middle Column (x = " << middleX << "):" << std::endl;
     for (int y = 0; y < height; ++y) {
         Uint32* pixels = static_cast<Uint32*>(surface->pixels);
         Uint32 pixel = pixels[y * (surface->pitch / 4) + middleX];
 
         Uint8 r, g, b, a;
         SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
-        std::cout << "[" << y << "] RGBA(" << static_cast<int>(r) << ", " 
-                  << static_cast<int>(g) << ", " << static_cast<int>(b) << ", " 
-                  << static_cast<int>(a) << ") ";
+        // std::cout << "[" << y << "] RGBA(" << static_cast<int>(r) << ", " 
+        //          << static_cast<int>(g) << ", " << static_cast<int>(b) << ", " 
+        //          << static_cast<int>(a) << ") ";
     }
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     // Output middle row
-    std::cout << "Middle Row (y = " << middleY << "):" << std::endl;
+    // std::cout << "Middle Row (y = " << middleY << "):" << std::endl;
     Uint32* rowPixels = static_cast<Uint32*>(surface->pixels) + (middleY * (surface->pitch / 4));
     for (int x = 0; x < width; ++x) {
         Uint32 pixel = rowPixels[x];
 
         Uint8 r, g, b, a;
         SDL_GetRGBA(pixel, surface->format, &r, &g, &b, &a);
-        std::cout << "[" << x << "] RGBA(" << static_cast<int>(r) << ", " 
-                  << static_cast<int>(g) << ", " << static_cast<int>(b) << ", " 
-                  << static_cast<int>(a) << ") ";
+        // std::cout << "[" << x << "] RGBA(" << static_cast<int>(r) << ", " 
+        //          << static_cast<int>(g) << ", " << static_cast<int>(b) << ", " 
+        //          << static_cast<int>(a) << ") ";
     }
-    std::cout << std::endl;
+    // std::cout << std::endl;
 
     // Free the surface
     SDL_FreeSurface(surface);

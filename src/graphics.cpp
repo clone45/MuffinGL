@@ -1,5 +1,5 @@
 // graphics.cpp
-#include "graphics.hpp"
+#include "muffinGL/graphics.hpp"
 #include <SDL2/SDL_image.h>
 #include <stdexcept>
 #include <iostream>

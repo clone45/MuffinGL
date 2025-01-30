@@ -1,6 +1,6 @@
-#include "graphics.hpp"
-#include "texture.hpp"
-#include "layer.hpp"
+#include "muffinGL/graphics.hpp"
+#include "muffinGL/texture.hpp"
+#include "muffinGL/layer.hpp"
 #include <iostream>
 #include <filesystem>
 

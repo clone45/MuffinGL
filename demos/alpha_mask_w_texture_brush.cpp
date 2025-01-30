@@ -1,6 +1,7 @@
 // C:\Code\GameDev\muffinGL\src\main.cpp
-#include "graphics.hpp"
-#include "texture.hpp"
+#include "muffinGL/graphics.hpp"
+#include "muffinGL/texture.hpp"
+#include "muffinGL/layer.hpp"
 #include <iostream>
 #include <cmath>
 

@@ -1,0 +1,2 @@
+C:/msys64/mingw64/bin/ar.exe qc libmuffinGL.a CMakeFiles/muffinGL.dir/src/graphics.cpp.obj CMakeFiles/muffinGL.dir/src/raster.cpp.obj CMakeFiles/muffinGL.dir/src/texture.cpp.obj CMakeFiles/muffinGL.dir/src/layer.cpp.obj CMakeFiles/muffinGL.dir/src/camera.cpp.obj
+C:/msys64/mingw64/bin/ranlib.exe libmuffinGL.a
