@@ -15,6 +15,8 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     std::cout << "SDL_image initialized" << std::endl;
+    
+    // Create window and renderer
 
     SDL_Window* window = SDL_CreateWindow(
         "Layer Blend Issue Demo",
